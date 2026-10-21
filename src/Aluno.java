@@ -1,17 +1,5 @@
-public class Aluno {
-    private String nome;
-    private int ra;
-
-    public Aluno(String nome, int ra) {
-        this.nome = nome;
-        this.ra = ra;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public int getRa() {
-        return ra;
+public class Aluno extends Usuario { //a classe Aluno herda os atributos e métodos da classe Usuario
+    public Aluno(String nome, int id) { //recebe o nome e o id do aluno
+        super(nome, id);
     }
 }
