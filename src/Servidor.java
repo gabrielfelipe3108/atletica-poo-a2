@@ -1,17 +1,5 @@
-public class Servidor {
-    private String nome;
-    private int id;
-
-    public Servidor(String nome, int id) {
-        this.nome = nome;
-        this.id = id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public int getId() {
-        return id;
+public class Servidor extends Usuario { //a classe Servidor herda os atributos e métodos da classe Usuario
+    public Servidor(String nome, int id) {//recebe o nome e o identificador do servidor
+        super(nome, id);
     }
 }
