@@ -6,8 +6,8 @@ public class Sistema {
 
     public Sistema() {
         equipamentos = new ArrayList<>();
-        //lista de equipamentos disponíveis
-        equipamentos.add(new Bola(1, "Bola de futsal"));
+        //lista fixa de equipamentos disponíveis
+        equipamentos.add(new Bola(1, "Bola de futebol"));
         equipamentos.add(new Bola(2, "Bola de basquete"));
         equipamentos.add(new Bola(3, "Bola de vôlei"));
 
@@ -21,7 +21,7 @@ public class Sistema {
         equipamentos.add(new Colete(9, "Colete 2"));
     }
 
-    public void listarEquipamentos() {
+    public void listarDisponiveis() {//exibe na tela quais equipamentos podem ser feitos empréstimos
         System.out.println("Equipamentos disponíveis para empréstimo:");
         boolean encontrou = false;
         for (Equipamento equipamento : equipamentos) {
@@ -34,13 +34,40 @@ public class Sistema {
             System.out.println("Nenhum equipamento disponível no momento.");
         }
     }
+
+    public void registrarEmprestimo(){
+        System.out.println("Gostaria de realizar qual empréstimo?");
+        for(Equipamento equipamento : equipamentos){
+
+        }
+    }	
+
+    public void registrarDevolucao(){
+        System.out.println("O que será devolvido?");
+    }
+
+    public void listarHistorico(){
+
+    }
+
+    public void listarResponsaveis(){
+
+    }
+
 }
 
+
 /*
-listarEmprestados()	OK
-registrarEmprestimo()	
-registrarDevolucao()	
-listarHistorico()	
-listarResponsaveis()	
-listarDefeitos()
+FUNÇÕES DE USUÁRIOS:
+1 cadastraAluno()
+2 cadastraServidor()
+3 listaUsuarios()
+
+FUNÇÕES DO MENU:
+listarDisponiveis() OK
+listarEmprestados()	- quais foram emprestados e quem está com o que
+registrarEmprestimo() - pedir um emprestimo novo
+registrarDevolucao() - registra a volta do equipamento para o estoque
+listarHistorico() - historico contendo todos os empréstimos e marca quem deveolve danificado	
+listarResponsaveis() - 
 */
