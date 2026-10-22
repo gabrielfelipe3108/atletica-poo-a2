@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class Sistema {
     private ArrayList<Equipamento> equipamentos;
@@ -45,17 +46,22 @@ public class Sistema {
     }
 
     public Equipamento buscarEquipamento(int codigo) { //procura equipamento pelo código
-    for (Equipamento equipamento : equipamentos) {
-        if (equipamento.getCodigo() == codigo) {
-            return equipamento;
+        for (Equipamento equipamento : equipamentos) {
+            if (equipamento.getCodigo() == codigo) {
+                return equipamento;
+            }
         }
-    }
-        return null;
+            return null;
     }
     
-    public void registrarEmprestimo(Usuario usuario, int codigo){
+    public void registrarEmprestimo(Usuario usuario, int codigo){ //cria-se um novo empréstimo no sistema. Verifica se usuário e equipamento existem
         if (usuario == null) {
             System.out.println("Usuário não encontrado.");
+            return;
+        }
+        if(usuario.estaBloqueado()){//verifica se o usuário está bloqueado para emprestimos
+            System.out.println("Usuário está bloqueado e não pode realizar empréstimos!");
+            System.out.println("Usuário está bloqueado até: " + usuario.getBloqueadoAte());
             return;
         }
         //verifica se o equipamento existe
@@ -106,53 +112,90 @@ public class Sistema {
         System.out.println("Equipamento: " + equipamento.getNome());
         System.out.println("Devolver até: " + emprestimo.getdataLimiteDevolucao());
     }
-        
-        
-        
-        
-        
-        
-        
-        /*
-            DEPENDE DO GABRIEL:
-            Identificar aluno ou servidor;
-            Verificar os limites de em´restimos por tipo de usuário;
-            Criar registro na classe Emprestimo;
-            Alterar a disponibilidade do equipamento para false;
-        */
+
+    
+    public void registrarDevolucao(int codigo, Scanner scanner) {
+        //procura o equipamento pelo código
+        Equipamento equipamento = buscarEquipamento(codigo);
+        if (equipamento == null) {
+            System.out.println("Equipamento não encontrado!");
+            return;
+        }
+        //procura o empréstimo ativo desse equipamento
+        Emprestimo ativo = null;
+        for (Emprestimo emprestimo : emprestimos) {
+            if (emprestimo.getEquipamento().getCodigo() == codigo
+                    && !emprestimo.isDevolvido()) {
+                ativo = emprestimo;
+                break;
+            }
+        }
+        if (ativo == null) {
+            System.out.println("Este equipamento não possui empréstimo ativo!");
+            return;
+        }
+        Usuario usuario = ativo.getUsuario();
+        System.out.println("Equipamento: " + equipamento.getNome());
+        System.out.println("Responsável: " + usuario.getNome());
+        //calcula os dias de atraso
+        LocalDateTime agora = LocalDateTime.now();
+        LocalDateTime prazo = ativo.getdataLimiteDevolucao();
+        int diasAtraso = 0;
+        if (agora.isAfter(prazo)) {
+            diasAtraso = (int) Math.max(1,
+                    java.time.temporal.ChronoUnit.DAYS.between(
+                        prazo.toLocalDate(),
+                        agora.toLocalDate()));
+        }
+
+        //a penalidade inicial é igual ao atraso
+        int diasPenalidade = diasAtraso;
+        //verifica se o equipamento foi devolvido com defeito
+        boolean comDefeito = false;
+        if (equipamento instanceof Bike) {
+            Bike bike = (Bike) equipamento;
+            //chama a vistoria criada em Bike.java
+            boolean aprovada = bike.Vistoria(scanner);
+            comDefeito = !aprovada;
+        } else {
+            System.out.print("Equipamento com defeito? (S/N): ");
+            String resposta = scanner.nextLine().trim();
+            while (!resposta.equalsIgnoreCase("S")
+                    && !resposta.equalsIgnoreCase("N")) {
+                System.out.print("Digite apenas S ou N: ");
+                resposta = scanner.nextLine().trim();
+            }
+            comDefeito = resposta.equalsIgnoreCase("S");
+        }
+
+        //penalidade adicional por defeito
+        if (comDefeito) {
+            diasPenalidade += 2;
+            ativo.setObservacoes("Equipamento devolvido com defeito.");
+        }
+        //registra atraso
+        ativo.setDiasAtraso(diasAtraso);
+        //termina o empréstimo e registra a data real
+        ativo.registrarDevolucao();
+        //coloca equipamentos que não estão com defeito de volta p emprestimo
+        equipamento.setDisponivel(!comDefeito);
+        //põe penalidade ao usuário
+        usuario.aplicarPenalidade(diasPenalidade);
+
+        System.out.println("Devolução registrada com sucesso!");
+        System.out.println("Dias de atraso: " + diasAtraso);
+        System.out.println("Dias de penalidade: " + diasPenalidade);
+
+        if (diasPenalidade > 0) {
+            System.out.println("Usuário bloqueado até: "
+                    + usuario.getBloqueadoAte());
+        }
+
+        if (comDefeito) {
+            System.out.println("Equipamento encaminhado para manutenção!");
+        }
     }
 
-
-
-    public void registrarDevolucao(int codigo) {
-
-    //procura equipamento por código
-    Equipamento equipamento = buscarEquipamento(codigo);
-    //verifica se o equipamento existe
-    if (equipamento == null) {
-        System.out.println("Equipamento não encontrado!");
-        return;
-    }
-    //verifica se o equipamento está disponível
-    if (equipamento.isDisponivel()) {
-        System.out.println("Este equipamento já está disponível!");
-        return;
-    }
-    System.out.println("Equipamento selecionado para devolução: "
-            + equipamento.getNome());
-
-    /*
-     * DEPENDE DO GABRIEL:
-     * 1. Localizar o empréstimo ativo;
-     * 2. Registrar a data da devolução;
-     * 3. Verificar se houve atraso;
-     * 4. Aplicar bloqueio, caso necessário;
-     * 5. Fazer vistoria se for uma Bike;
-     * 6. Atualizar a disponibilidade do equipamento.
-     */
-    }
-
-    }
 
     public void listarHistorico(){
 
