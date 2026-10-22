@@ -4,7 +4,7 @@ public class Emprestimo {
     private Usuario usuario; //usuário que fez o empréstimo
     private Equipamento equipamento; //equipamento que foi emprestado
     private LocalDateTime dataEmprestimo; //data do empréstimo
-    private LocalDateTime dataDevolucao; //data prevista para a devolução
+    private LocalDateTime dataLimiteDevolucao; //data prevista para a devolução
     private LocalDateTime dataDevolucaoEfetiva; //data real da devolução
     private boolean devolvido; //indica se o equipamento foi devolvido
     private int diasAtraso; //número de dias de atraso na devolução
@@ -18,7 +18,7 @@ public class Emprestimo {
         this.usuario = usuario;
         this.equipamento = equipamento;
         this.dataEmprestimo = dataEmprestimo;
-        this.dataDevolucao = equipamento.calcularDataDevolucao(dataEmprestimo); //calcula o prazo de devolução conforme o equipamento
+        this.dataLimiteDevolucao = equipamento.dataLimiteDevolucao(dataEmprestimo); //calcula o prazo de devolução conforme o equipamento
         this.dataDevolucaoEfetiva = null; //inicialmente, o equipamento ainda não foi devolvido
         this.devolvido = false;
         this.diasAtraso = 0;
@@ -41,8 +41,8 @@ public class Emprestimo {
         return dataEmprestimo;
     }
 
-    public LocalDateTime getDataDevolucao() {
-        return dataDevolucao; //retorna a data prevista para a devolução
+    public LocalDateTime getDataLimiteDevolucao() {
+        return dataLimiteDevolucao; //retorna a data prevista para a devolução
     }
 
     public LocalDateTime getDataDevolucaoEfetiva() {
