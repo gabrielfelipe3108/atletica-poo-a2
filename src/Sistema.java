@@ -1,8 +1,10 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.time.LocalDateTime;
 
 public class Sistema {
     private ArrayList<Equipamento> equipamentos;
+    private ArrayList<Emprestimo> emprestimos = new ArrayList<>();
 
     public Sistema() {
         equipamentos = new ArrayList<>();
@@ -14,7 +16,7 @@ public class Sistema {
         equipamentos.add(new Bike(4, "Bicicleta 1"));
         equipamentos.add(new Bike(5, "Bicicleta 2"));
 
-        equipamentos.add(new Raquete(6, "Raquete 1"));//gabriel implementar a classe raquete
+        equipamentos.add(new Raquete(6, "Raquete 1"));
         equipamentos.add(new Raquete(7, "Raquete 2"));
 
         equipamentos.add(new Colete(8, "Colete 1 "));
@@ -51,7 +53,11 @@ public class Sistema {
         return null;
     }
     
-    public void registrarEmprestimo(String matricula, int codigo){
+    public void registrarEmprestimo(Usuario usuario, int codigo){
+        if (usuario == null) {
+            System.out.println("Usuário não encontrado.");
+            return;
+        }
         //verifica se o equipamento existe
         Equipamento equipamento = buscarEquipamento(codigo);
         if(equipamento == null){
@@ -62,8 +68,51 @@ public class Sistema {
             System.out.println("Equipamento não disponível para empréstimo.");
             return;
         }
-        System.out.println("Equipamento selecionado: " + equipamento.getNome());
 
+        //define o limite de emprestimos dependendo do tipo de usuário
+        int limiteEmprestimos;
+        if (usuario instanceof Aluno) {
+            limiteEmprestimos = 2; // Limite de empréstimos para alunos
+        } else if (usuario instanceof Servidor) {
+            limiteEmprestimos = 4; // Limite de empréstimos para servidores
+        } else {
+            System.out.println("Tipo de usuário desconhecido.");
+            return;
+        }
+
+        //conta quantos emprestimos o usuario tem
+        int qtdAtivos = 0;
+        for (Emprestimo emprestimo : emprestimos) {
+            if (emprestimo.getUsuario() == usuario && !emprestimo.isDevolvido()) {
+                qtdAtivos++;
+            }
+        }
+        if (qtdAtivos >= limiteEmprestimos) {
+            System.out.println("Usuário atingiu o limite de empréstimos ativos!");
+            return;
+        }
+
+        //registra qunadoo emprestimo é feito
+        LocalDateTime dataEmprestimo = LocalDateTime.now();
+        Emprestimo emprestimo = new Emprestimo(
+            usuario, equipamento, dataEmprestimo);
+
+        //guarda no histórico
+        emprestimos.add(emprestimo);
+
+        //coloca o equipamento como indisponível
+        equipamento.setDisponivel(false);
+        System.out.println("Empréstimo realizado com sucesso!");
+        System.out.println("Equipamento: " + equipamento.getNome());
+        System.out.println("Devolver até: " + emprestimo.getdataLimiteDevolucao());
+    }
+        
+        
+        
+        
+        
+        
+        
         /*
             DEPENDE DO GABRIEL:
             Identificar aluno ou servidor;
@@ -101,7 +150,7 @@ public class Sistema {
      * 5. Fazer vistoria se for uma Bike;
      * 6. Atualizar a disponibilidade do equipamento.
      */
-}
+    }
 
     }
 
