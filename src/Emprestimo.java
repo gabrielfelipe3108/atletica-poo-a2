@@ -53,7 +53,6 @@ public class Emprestimo {
         if (!devolvido) { //verifica se o equipamento ainda não foi devolvido
             this.dataDevolucaoEfetiva = LocalDateTime.now(); //registra a data e a hora da devolução
             this.devolvido = true; //marca o equipamento como devolvido
-            this.equipamento.setDisponivel(true); //torna o equipamento disponível novamente
         }
     }
 
