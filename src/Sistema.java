@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 public class Sistema {
     private ArrayList<Equipamento> equipamentos;
@@ -23,12 +22,41 @@ public class Sistema {
         equipamentos.add(new Colete(8, "Colete 1 "));
         equipamentos.add(new Colete(9, "Colete 2"));
     }
-
-    private ArrayList<Usuario> usuarios = new ArrayList<>();
-
+    
     public void cadastrarUsuario(Usuario usuario) {
+        if (usuario == null) {
+            System.out.println("Usuário inválido!");
+            return;
+        }
+        if (buscarUsuario(usuario.getMatricula()) != null) {
+            System.out.println("Matrícula já cadastrada!");
+            return;
+        }
         usuarios.add(usuario);
         System.out.println("Usuário cadastrado com sucesso!");
+    }
+
+    private ArrayList<Usuario> usuarios = new ArrayList<>();
+    
+    public Usuario buscarUsuario(int matricula) {
+        for (Usuario usuario : usuarios) {
+            if (usuario.getMatricula() == matricula) {
+                return usuario;
+            }
+        }
+        return null;
+    }
+    
+
+    public void listarUsuarios() { //mostra na tela quais usuarios tem cadastro ativo
+        System.out.println("Usuários cadastrados:");
+        if (usuarios.isEmpty()) {
+            System.out.println("Nenhum usuário cadastrado.");
+            return;
+        }
+        for (Usuario usuario : usuarios) {
+            System.out.println("Nome: " + usuario.getNome() + ", Matrícula: " + usuario.getMatricula());
+        }
     }
 
     public void listarDisponiveis() {//exibe na tela quais equipamentos podem ser feitos empréstimos
@@ -59,6 +87,14 @@ public class Sistema {
             System.out.println("Usuário não encontrado.");
             return;
         }
+
+        Usuario cadastrado = buscarUsuario(usuario.getMatricula());//recupera o usuario cadastrado
+        if (cadastrado == null) {
+            System.out.println("Usuário não cadastrado!");
+            return;
+        }
+        usuario = cadastrado;
+
         if(usuario.estaBloqueado()){//verifica se o usuário está bloqueado para emprestimos
             System.out.println("Usuário está bloqueado e não pode realizar empréstimos!");
             System.out.println("Usuário está bloqueado até: " + usuario.getBloqueadoAte());
@@ -78,9 +114,9 @@ public class Sistema {
         //define o limite de emprestimos dependendo do tipo de usuário
         int limiteEmprestimos;
         if (usuario instanceof Aluno) {
-            limiteEmprestimos = 2; // Limite de empréstimos para alunos
+            limiteEmprestimos = 2; //llimite de empréstimos para alunos
         } else if (usuario instanceof Servidor) {
-            limiteEmprestimos = 4; // Limite de empréstimos para servidores
+            limiteEmprestimos = 4; //limite de empréstimos para servidores
         } else {
             System.out.println("Tipo de usuário desconhecido.");
             return;
@@ -110,7 +146,7 @@ public class Sistema {
         equipamento.setDisponivel(false);
         System.out.println("Empréstimo realizado com sucesso!");
         System.out.println("Equipamento: " + equipamento.getNome());
-        System.out.println("Devolver até: " + emprestimo.getdataLimiteDevolucao());
+        System.out.println("Devolver até: " + emprestimo.getDataLimiteDevolucao());
     }
 
     
@@ -139,7 +175,7 @@ public class Sistema {
         System.out.println("Responsável: " + usuario.getNome());
         //calcula os dias de atraso
         LocalDateTime agora = LocalDateTime.now();
-        LocalDateTime prazo = ativo.getdataLimiteDevolucao();
+        LocalDateTime prazo = ativo.getDataLimiteDevolucao();
         int diasAtraso = 0;
         if (agora.isAfter(prazo)) {
             diasAtraso = (int) Math.max(1,
@@ -147,7 +183,6 @@ public class Sistema {
                         prazo.toLocalDate(),
                         agora.toLocalDate()));
         }
-
         //a penalidade inicial é igual ao atraso
         int diasPenalidade = diasAtraso;
         //verifica se o equipamento foi devolvido com defeito
@@ -167,20 +202,20 @@ public class Sistema {
             }
             comDefeito = resposta.equalsIgnoreCase("S");
         }
-
         //penalidade adicional por defeito
         if (comDefeito) {
             diasPenalidade += 2;
             ativo.setObservacoes("Equipamento devolvido com defeito.");
         }
-        //registra atraso
-        ativo.setDiasAtraso(diasAtraso);
-        //termina o empréstimo e registra a data real
-        ativo.registrarDevolucao();
-        //coloca equipamentos que não estão com defeito de volta p emprestimo
-        equipamento.setDisponivel(!comDefeito);
-        //põe penalidade ao usuário
-        usuario.aplicarPenalidade(diasPenalidade);
+        ativo.setDiasAtraso(diasAtraso);//marca dias de atraso
+        if (diasAtraso > 0) {
+            String observacao = ativo.getObservacoes();
+            ativo.setObservacoes(observacao + " Devolvido com atraso de " + diasAtraso + " dias.");
+            System.out.println("Devolução com atraso!");
+        }
+        ativo.registrarDevolucao(); //termina o emprestimo e coloca a data real
+        equipamento.setDisponivel(!comDefeito);//disponibiliza equipamento se n tiver defeito
+        usuario.aplicarPenalidade(diasPenalidade);//aplica penalidade ao usuário
 
         System.out.println("Devolução registrada com sucesso!");
         System.out.println("Dias de atraso: " + diasAtraso);
@@ -190,27 +225,79 @@ public class Sistema {
             System.out.println("Usuário bloqueado até: "
                     + usuario.getBloqueadoAte());
         }
-
         if (comDefeito) {
             System.out.println("Equipamento encaminhado para manutenção!");
         }
     }
+    
+    public void listarHistorico() {
+        System.out.println("\nHISTÓRICO DE EMPRÉSTIMOS");
+        //ve se já houve algum empréstimo
+        if (emprestimos.isEmpty()) {
+            System.out.println("Nenhum empréstimo registrado.");
+            return;
+        }
+        //ve todos os empréstimos registrados
+        for (Emprestimo emprestimo : emprestimos) {
+            Usuario usuario = emprestimo.getUsuario();
+            Equipamento equipamento = emprestimo.getEquipamento();
+            System.out.println("\n-----------------------------");
+            //infos do responsável
+            System.out.println("Usuário: " + usuario.getNome());
+            System.out.println("Matrícula: " + usuario.getMatricula());
+            //infos do equipamento
+            System.out.println("Código: " + equipamento.getCodigo());
+            System.out.println("Equipamento: " + equipamento.getNome());
 
+            //datas do empréstimo
+            System.out.println("Data da retirada: "
+                    + emprestimo.getDataEmprestimo());
+            System.out.println("Prazo de devolução: "
+                    + emprestimo.getDataLimiteDevolucao());
+            //verifica se o equipamento foi devolvido
+            if (emprestimo.isDevolvido()) {
+                System.out.println("Situação: Devolvido");
+                System.out.println("Data da devolução: "
+                        + emprestimo.getDataDevolucaoEfetiva());
+                System.out.println("Dias de atraso: "
+                        + emprestimo.getDiasAtraso());
+            } else {
+                System.out.println("Situação: Emprestado");
+            }
+            //exibe observações quando existirem
+            if (!emprestimo.getObservacoes().isEmpty()) {
+                System.out.println("Observações: "
+                        + emprestimo.getObservacoes());
+            }
+        }
+        System.out.println("\nFIM DO HISTÓRICO");
+    }
 
-    public void listarHistorico(){
+    public void listarEmprestados() { //mostra quem que esta com equipamento e qual é esse equipamento
+        System.out.println("\n=== EQUIPAMENTOS EMPRESTADOS ===");
+        boolean encontrou = false;
+        for (Emprestimo emprestimo : emprestimos) {
+            if (!emprestimo.isDevolvido()) {
+                System.out.println("-------------------------");
+                System.out.println("Equipamento: "
+                        + emprestimo.getEquipamento().getNome());
+                System.out.println("Código: "
+                        + emprestimo.getEquipamento().getCodigo());
+                System.out.println("Responsável: "
+                        + emprestimo.getUsuario().getNome());
+                System.out.println("Matrícula: "
+                        + emprestimo.getUsuario().getMatricula());
+                System.out.println("Prazo: "
+                        + emprestimo.getDataLimiteDevolucao());
+                encontrou = true;
+            }
+        }
+        if (!encontrou) {
+            System.out.println("Nenhum equipamento emprestado.");
+        }
+    }
 
+    public void sair() { //finaliza o sistema
+        System.out.println("Saindo do sistema...");
     }
 }
-
-/*
-FUNÇÕES DE USUÁRIOS:
-1 cadastraUsuario()
-2 listaUsuarios()
-
-FUNÇÕES DE EQUIPAMENTOS:
-4 listarDisponiveis() OK
-5 registrarEmprestimo() - pedir um emprestimo novo
-6 registrarDevolucao() - registra a volta do equipamento para o estoque
-7 listarHistorico() - historico contendo todos os empréstimos e marca quem deveolve danificado	
-listarEmprestados()	- quais foram emprestados e quem está com o que
-*/

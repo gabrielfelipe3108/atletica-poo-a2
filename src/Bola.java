@@ -1,7 +1,6 @@
 import java.time.LocalDateTime;
 
 public class Bola extends Equipamento {
-
     public Bola(int codigo, String nome) {
         super(codigo, nome);//o que foi herdado de Equipamento
     }
